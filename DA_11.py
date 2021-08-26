@@ -1,5 +1,5 @@
 import requests
-# Set the target webpage
+
 url = "http://brickset.com/sets/year-2008"
 r = requests.get(url)
 # This will get the full page
@@ -25,20 +25,26 @@ rh = requests.get(url2, headers=headers)
 print(rh.text)
 
 import scrapy
-class NewSpider(scrapy.Spider):
-    name = "new_spider"
-    start_urls = ["http://brickset.com/sets/year-2008"]
+class BrickSetSpider(scrapy.Spider):
+    name = 'brick_spider'
+    start_urls = ['http://brickset.com/sets/year-2008']
+
     def parse(self, response):
-        xpath_selector = '//img'
-        for x in response.xpath(xpath_selector):
-            newsel = '@src'
+        SET_SELECTOR = '.set'
+        for brickset in response.css(SET_SELECTOR):
+            IMAGE_SELECTOR = 'img ::attr(src)'
             yield {
-                    'Image Link': x.xpath(newsel).extract_first(),
+                'image': brickset.css(IMAGE_SELECTOR).extract_first(),
             }
-            Page_selector = '.next a ::attr(href)'
-            next_page = response.css(Page_selector).extract_first()
-            if next_page:
-                yield scrapy.Request(
-                    response.urljoin(next_page),
-                    callback=self.parse
+
+        NEXT_PAGE_SELECTOR = '.next a ::attr(href)'
+        next_page = response.css(NEXT_PAGE_SELECTOR).extract_first()
+        if next_page:
+            yield scrapy.Request(
+                response.urljoin(next_page),
+                callback=self.parse
             )
+
+
+
+
